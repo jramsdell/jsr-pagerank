@@ -17,41 +17,11 @@
     </repositories>
 
     <dependencies>
-        <dependency>
-            <groupId>com.github.TREMA-UNH</groupId>
-            <artifactId>trec-car-tools-java</artifactId>
-            <version>9</version>
-        </dependency>
 
         <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-core</artifactId>
-            <version>7.2.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jsoup</groupId>
-            <artifactId>jsoup</artifactId>
-            <version>1.8.3</version>
-        </dependency>
-
-
-        <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-analyzers-common</artifactId>
-            <version>7.2.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jooq</groupId>
-            <artifactId>jool</artifactId>
-            <version>0.9.12</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.mapdb</groupId>
-            <artifactId>mapdb</artifactId>
-            <version>3.0.5</version>
+            <groupId>org.nd4j</groupId>
+            <artifactId>nd4j-native-platform</artifactId>
+            <version>0.9.1</version>
         </dependency>
 
         <dependency>
@@ -102,7 +72,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>unh.edu.cs.MainKT</mainClass>
+                            <mainClass>unh.edu.cs.Main</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

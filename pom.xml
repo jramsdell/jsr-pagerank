@@ -102,7 +102,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>unh.edu.cs.Main</mainClass>
+                            <mainClass>unh.edu.cs.MainKT</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

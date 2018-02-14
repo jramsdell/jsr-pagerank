@@ -14,10 +14,6 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
-        <repository>
-            <id>jcenter</id>
-            <url>https://bintray.com</url>
-        </repository>
     </repositories>
 
     <dependencies>
@@ -26,7 +22,6 @@
             <artifactId>kotlin-stdlib</artifactId>
             <version>1.2.21</version>
         </dependency>
-
 
     </dependencies>
 

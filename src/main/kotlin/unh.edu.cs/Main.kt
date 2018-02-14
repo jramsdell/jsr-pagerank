@@ -1,29 +1,54 @@
 package unh.edu.cs
 
 import java.io.File
+import java.lang.System.exit
 
 val incomingLinks: HashMap<String, ArrayList<String>> = HashMap()           // Nodes that link to node (key)
+val outDegree: HashMap<String, Int> = HashMap()                             // Out-degree of a node
 val scores: HashMap<String, Double> = HashMap()                             // Current scores of the nodes
+val argOptions: HashMap<String, String> = HashMap()                         // Stores command-line options
+
+val seedSet: HashSet<String> = HashSet()                                    // Used for personalized PageRank
 val nodeList: ArrayList<String> = ArrayList()                               // List of all nodes
-const val tChance: Double = 0.85
-val outDegree: HashMap<String, Int> = HashMap()
-val argOptions: HashMap<String, String> = HashMap()
+
+const val tChance: Double = 0.85                                            // Dampening factor
+
+fun printUsage() {
+    exit(1)
+}
 
 // Reads node adjacency list
-fun parsePages(filename: String) {
+fun parsePages(filename: String) =
     File(filename)
             .bufferedReader()
             .forEachLine {
                 val elements = it.split("\t")
                 val originNode = elements[0]
                 val outGoingNodes = elements.drop(1).toList()
-
-                nodeList += originNode
                 scores[originNode] = 0.0
-                outDegree[originNode] = outGoingNodes.size
-                outGoingNodes.forEach { incomingLinks.getOrPut(it, {ArrayList()}) += originNode}
+
+                // Normal PageRank
+                if (!argOptions.containsKey("-seed_set")) {
+                    nodeList += originNode
+                    outDegree[originNode] = outGoingNodes.size
+                    outGoingNodes.forEach { incomingLinks.getOrPut(it, { ArrayList() }) += originNode }
+                }
+                // Personalized PageRank
+                else if (originNode in seedSet || outGoingNodes.any { seedSet.contains(it) }) {
+                    nodeList += originNode
+
+                    // If the origin is in the seedSet, all of the outgoing nodes are relevant.
+                    // Otherwise, we only consider links to outgoing nodes that are in the seed set.
+                    val relevantNodes = if (seedSet.contains(originNode)) outGoingNodes
+                                        else outGoingNodes.filter { seedSet.contains(it) }
+
+                    outDegree[originNode] = relevantNodes.size
+                    relevantNodes.forEach { incomingLinks.getOrPut(it, { ArrayList() }) += originNode }
+                }
             }
-}
+
+// Parse personalized pages
+fun parseSeedSet(filename: String) = File(filename).readLines().toCollection(seedSet)
 
 fun doBackup(node: String) {
     val total = incomingLinks[node]?.sumByDouble { scores[it]!! / outDegree[it]!! } ?: 0.0
@@ -37,7 +62,6 @@ fun doPageRank() {
 }
 
 fun printScore() {
-
     // renormalize values
     scores.entries.sumByDouble { it.value }
             .let { total -> scores.replaceAll { key, value -> value / total } }
@@ -55,11 +79,8 @@ fun parseCommands(args: Array<String>) {
 
 fun main(args: Array<String>) {
     parseCommands(args)
-    argOptions.forEach { t, u -> println("$t: $u")  }
-//    val graphLocation = "graph.txt"
-//    parsePages(graphLocation)
-//    doPageRank()
-//    printScore()
-//    val out = File(graphLocation).bufferedReader()
-//    out.forEachLine { println(it) }
+    argOptions["-graph"]?.let { parsePages(it) } ?: printUsage()
+    argOptions["-seed_set"]?.let { parseSeedSet(it) }
+    doPageRank()
+    printScore()
 }

@@ -13,12 +13,14 @@ val nodeList: ArrayList<String> = ArrayList()                               // L
 
 const val tChance: Double = 0.85                                            // Dampening factor
 
+val usage =
+"""Usage: -graph graphFile [-seed_set seedFile]
+Where:
+    graphFile: adjacency list of nodes (see graph.txt for example)
+    seedFile: (optional) file containing seed node IDs` for personalized PageRank, one per line."""
+
+
 fun printUsage() {
-    val usage =
-            """Usage: -graph graphFile [-seed_set seedFile]
-                Where:
-                    graphFile: adjacency list of nodes (see graph.txt for example)
-                    seedFile: (optional) file containing seed node IDs` for personalized PageRank, one per line."""
     println(usage)
     exit(1)
 }

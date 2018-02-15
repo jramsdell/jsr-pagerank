@@ -83,11 +83,6 @@ fun parseCommands(args: Array<String>) {
 
 fun main(args: Array<String>) {
     parseCommands(args)
-
-    // Test options
-    argOptions["-graph"] = "graph.txt"
-//    argOptions["-seed_set"] = "seed_set.txt"
-
     argOptions["-seed_set"]?.let { parseSeedSet(it) }
     argOptions["-graph"]?.let { parsePages(it) } ?: printUsage()
     doPageRank()

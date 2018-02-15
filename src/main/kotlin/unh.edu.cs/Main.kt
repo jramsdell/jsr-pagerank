@@ -17,7 +17,7 @@ val usage =
 """Usage: -graph graphFile [-seed_set seedFile]
 Where:
     graphFile: adjacency list of nodes (see graph.txt for example)
-    seedFile: (optional) file containing seed node IDs` for personalized PageRank, one per line."""
+    seedFile: (optional) file containing seed node IDs for personalized PageRank, one per line."""
 
 
 fun printUsage() {
@@ -29,30 +29,34 @@ fun printUsage() {
 fun parsePages(filename: String) =
     File(filename)
             .bufferedReader()
-            .forEachLine {
-                val elements = it.split("\t")
+            .forEachLine { line ->
+                val elements = line.split("\t")
                 val originNode = elements[0]
                 val outGoingNodes = elements.drop(1).toList()
                 scores[originNode] = 0.0
 
-                // Normal PageRank
-                if (!argOptions.containsKey("-seed_set")) {
-                    nodeList += originNode
-                    outDegree[originNode] = outGoingNodes.size
-                    outGoingNodes.forEach { incomingLinks.getOrPut(it, { ArrayList() }) += originNode }
-                }
-                // Personalized PageRank
-                else if (originNode in seedSet || outGoingNodes.any { seedSet.contains(it) }) {
-                    nodeList += originNode
+                nodeList += originNode
+                outDegree[originNode] = outGoingNodes.size
+                outGoingNodes.forEach { incomingLinks.getOrPut(line, { ArrayList() }) += originNode }
 
-                    // If the origin is in the seedSet, all of the outgoing nodes are relevant.
-                    // Otherwise, we only consider links to outgoing nodes that are in the seed set.
-                    val relevantNodes = if (seedSet.contains(originNode)) outGoingNodes
-                                        else outGoingNodes.filter { seedSet.contains(it) }
-
-                    outDegree[originNode] = relevantNodes.size
-                    relevantNodes.forEach { incomingLinks.getOrPut(it, { ArrayList() }) += originNode }
-                }
+//                // Normal PageRank
+//                if (!argOptions.containsKey("-seed_set")) {
+//                    nodeList += originNode
+//                    outDegree[originNode] = outGoingNodes.size
+//                    outGoingNodes.forEach { incomingLinks.getOrPut(line, { ArrayList() }) += originNode }
+//                }
+//                // Personalized PageRank
+//                else if (originNode in seedSet || outGoingNodes.any { node -> seedSet.contains(node) }) {
+//                    nodeList += originNode
+//
+//                    // If the origin is in the seedSet, all of the outgoing nodes are relevant.
+//                    // Otherwise, we only consider links to outgoing nodes that are in the seed set.
+//                    val relevantNodes = if (seedSet.contains(originNode)) outGoingNodes
+//                                        else outGoingNodes.filter { seedSet.contains(it) }
+//
+//                    outDegree[originNode] = relevantNodes.size
+//                    relevantNodes.forEach { incomingLinks.getOrPut(line, { ArrayList() }) += originNode }
+//                }
             }
 
 // Parse personalized pages
@@ -60,7 +64,13 @@ fun parseSeedSet(filename: String) = File(filename).readLines().toCollection(see
 
 fun doBackup(node: String) {
     val total = incomingLinks[node]?.sumByDouble { scores[it]!! / outDegree[it]!! } ?: 0.0
-    scores[node] = (1 - tChance) / nodeList.size + tChance * total
+    val baseValue = when {
+        seedSet.isEmpty() -> (1 - tChance) / nodeList.size
+        seedSet.contains(node) -> (1 - tChance) / seedSet.size
+        else -> 0.0
+    }
+
+    scores[node] = baseValue / nodeList.size + tChance * total
 }
 
 fun doPageRank() {
@@ -72,7 +82,7 @@ fun doPageRank() {
 fun printScore() {
     // renormalize values
     scores.entries.sumByDouble { it.value }
-            .let { total -> scores.replaceAll { key, value -> value / total } }
+            .let { total -> scores.replaceAll { _, value -> value / total } }
 
     // print top 10
     scores.entries.sortedByDescending { it.value }
@@ -87,8 +97,14 @@ fun parseCommands(args: Array<String>) {
 
 fun main(args: Array<String>) {
     parseCommands(args)
-    argOptions["-graph"]?.let { parsePages(it) } ?: printUsage()
+
+    // Test options
+    println("Remove this")
+    argOptions["-graph"] = "graph.txt"
+    argOptions["-seed_set"] = "seed_set.txt"
+
     argOptions["-seed_set"]?.let { parseSeedSet(it) }
+    argOptions["-graph"]?.let { parsePages(it) } ?: printUsage()
     doPageRank()
     printScore()
 }

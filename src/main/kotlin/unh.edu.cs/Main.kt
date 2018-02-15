@@ -33,52 +33,38 @@ fun parsePages(filename: String) =
                 val elements = line.split("\t")
                 val originNode = elements[0]
                 val outGoingNodes = elements.drop(1).toList()
-                scores[originNode] = 0.0
 
+                scores[originNode] = 0.0
                 nodeList += originNode
                 outDegree[originNode] = outGoingNodes.size
-                outGoingNodes.forEach { incomingLinks.getOrPut(line, { ArrayList() }) += originNode }
 
-//                // Normal PageRank
-//                if (!argOptions.containsKey("-seed_set")) {
-//                    nodeList += originNode
-//                    outDegree[originNode] = outGoingNodes.size
-//                    outGoingNodes.forEach { incomingLinks.getOrPut(line, { ArrayList() }) += originNode }
-//                }
-//                // Personalized PageRank
-//                else if (originNode in seedSet || outGoingNodes.any { node -> seedSet.contains(node) }) {
-//                    nodeList += originNode
-//
-//                    // If the origin is in the seedSet, all of the outgoing nodes are relevant.
-//                    // Otherwise, we only consider links to outgoing nodes that are in the seed set.
-//                    val relevantNodes = if (seedSet.contains(originNode)) outGoingNodes
-//                                        else outGoingNodes.filter { seedSet.contains(it) }
-//
-//                    outDegree[originNode] = relevantNodes.size
-//                    relevantNodes.forEach { incomingLinks.getOrPut(line, { ArrayList() }) += originNode }
-//                }
+                outGoingNodes.forEach { node -> incomingLinks.getOrPut(node, { ArrayList() }) += originNode }
             }
 
 // Parse personalized pages
 fun parseSeedSet(filename: String) = File(filename).readLines().toCollection(seedSet)
 
+// Backup a single node with respect to the PageRank formula
 fun doBackup(node: String) {
     val total = incomingLinks[node]?.sumByDouble { scores[it]!! / outDegree[it]!! } ?: 0.0
-    val baseValue = when {
-        seedSet.isEmpty() -> (1 - tChance) / nodeList.size
-        seedSet.contains(node) -> (1 - tChance) / seedSet.size
-        else -> 0.0
+    val initialValue = when {
+        seedSet.isEmpty() -> (1 - tChance) / nodeList.size          // Normal PageRank
+        seedSet.contains(node) -> (1 - tChance) / seedSet.size      // Personalized PageRank
+        else -> 0.0                                                 // Personalized PageRank
     }
 
-    scores[node] = baseValue / nodeList.size + tChance * total
+    scores[node] = initialValue + tChance * total
 }
 
+// I didn't know if there was a set numer of iterations we should do, or if we should be using residuals (a la MDPs).
+// So I just settled on a constant number of iterations...
 fun doPageRank() {
-    (0..50000).forEach {
+    (0..5000).forEach {
         nodeList.forEach { doBackup(it) }
     }
 }
 
+// Prints the top 10 pages according to PageRank scores
 fun printScore() {
     // renormalize values
     scores.entries.sumByDouble { it.value }
@@ -87,7 +73,7 @@ fun printScore() {
     // print top 10
     scores.entries.sortedByDescending { it.value }
             .take(10)
-            .forEach { (k,v) -> println("$k: $v")  }
+            .forEach { (k,v) -> println("$v \t $k")  }
 }
 
 fun parseCommands(args: Array<String>) {
@@ -99,9 +85,8 @@ fun main(args: Array<String>) {
     parseCommands(args)
 
     // Test options
-    println("Remove this")
     argOptions["-graph"] = "graph.txt"
-    argOptions["-seed_set"] = "seed_set.txt"
+//    argOptions["-seed_set"] = "seed_set.txt"
 
     argOptions["-seed_set"]?.let { parseSeedSet(it) }
     argOptions["-graph"]?.let { parsePages(it) } ?: printUsage()
